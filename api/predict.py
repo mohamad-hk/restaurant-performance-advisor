@@ -4,10 +4,10 @@ import joblib
 
 app = FastAPI() 
 
-saved = joblib.load("model.pkl")
+saved = joblib.load("../model.pkl")
 model = saved["model"] if isinstance(saved, dict) else saved
 
-df = pd.read_csv("weekly_data.csv")
+df = pd.read_csv("../weekly_data.csv")
 df = df.sort_values(["code", "year", "week"]).reset_index(drop=True)
 
 features = [
@@ -31,3 +31,4 @@ async def predict(request: Request):
         "code": code,
         "predicted_next_rate": float(pred)
     }
+

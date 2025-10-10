@@ -1,13 +1,18 @@
+import os
 from fastapi import FastAPI, Request
 import pandas as pd
 import joblib
 
-app = FastAPI() 
+app = FastAPI()
 
-saved = joblib.load("../model.pkl")
+BASE_DIR = os.path.dirname(__file__)
+model_path = os.path.join(BASE_DIR, "model.pkl")
+data_path = os.path.join(BASE_DIR, "weekly_data.csv")
+
+saved = joblib.load(model_path)
 model = saved["model"] if isinstance(saved, dict) else saved
 
-df = pd.read_csv("../weekly_data.csv")
+df = pd.read_csv(data_path)
 df = df.sort_values(["code", "year", "week"]).reset_index(drop=True)
 
 features = [
@@ -21,14 +26,11 @@ async def predict(request: Request):
     data = await request.json()
     code = data.get("code")
     subset = df[df["code"] == code]
+    if subset.empty:
+        return {"error": f"Code {code} not found in dataset"}
 
     last_row = subset.sort_values(["year", "week"]).iloc[-1]
-    X = last_row[features].to_frame().T
-    X = X.astype(float)
-
+    X = last_row[features].to_frame().T.astype(float)
     pred = model.predict(X)[0]
-    return {
-        "code": code,
-        "predicted_next_rate": float(pred)
-    }
 
+    return {"code": code, "predicted_next_rate": float(pred)}

@@ -33,4 +33,9 @@ async def predict(request: Request):
     X = last_row[features].to_frame().T.astype(float)
     pred = model.predict(X)[0]
 
-    return {"code": code, "predicted_next_rate": float(pred)}
+    return {
+        "code": code,
+        "predicted_next_rate": float(pred),
+        "last_mean_rate": float(last_row["mean_rate"])
+    }
+
